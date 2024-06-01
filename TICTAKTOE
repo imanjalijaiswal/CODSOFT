@@ -1,0 +1,123 @@
+import math
+
+# Constants representing the different players
+EMPTY = 0
+PLAYER_X = 1
+PLAYER_O = -1
+
+# Function to print the current state of the board
+def print_board(board):
+    for row in board:
+        print(" ".join(map(str, row)))
+
+# Function to check if a player has won the game
+def check_winner(board, player):
+    # Check rows
+    for row in board:
+        if all(cell == player for cell in row):
+            return True
+    # Check columns
+    for col in range(3):
+        if all(board[row][col] == player for row in range(3)):
+            return True
+    # Check diagonals
+    if all(board[i][i] == player for i in range(3)) or all(board[i][2-i] == player for i in range(3)):
+        return True
+    return False
+
+# Function to check if the game is over
+def game_over(board):
+    return check_winner(board, PLAYER_X) or check_winner(board, PLAYER_O) or sum(row.count(EMPTY) for row in board) == 0
+
+# Function to evaluate the current state of the board
+def evaluate(board):
+    if check_winner(board, PLAYER_X):
+        return 1
+    elif check_winner(board, PLAYER_O):
+        return -1
+    else:
+        return 0
+
+# Minimax function to find the best move
+def minimax(board, depth, maximizing_player):
+    if check_winner(board, PLAYER_X):
+        return 1
+    elif check_winner(board, PLAYER_O):
+        return -1
+    elif sum(row.count(EMPTY) for row in board) == 0:
+        return 0
+    
+    if maximizing_player:
+        max_eval = -math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == EMPTY:
+                    board[i][j] = PLAYER_X
+                    eval = minimax(board, depth+1, False)
+                    board[i][j] = EMPTY
+                    max_eval = max(max_eval, eval)
+        return max_eval
+    else:
+        min_eval = math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == EMPTY:
+                    board[i][j] = PLAYER_O
+                    eval = minimax(board, depth+1, True)
+                    board[i][j] = EMPTY
+                    min_eval = min(min_eval, eval)
+        return min_eval
+
+# Function to find the best move using the Minimax algorithm
+def find_best_move(board):
+    best_eval = -math.inf
+    best_move = None
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == EMPTY:
+                board[i][j] = PLAYER_X
+                eval = minimax(board, 0, False)
+                board[i][j] = EMPTY
+                if eval > best_eval:
+                    best_eval = eval
+                    best_move = (i, j)
+    return best_move
+
+# Function for human player's move
+def player_move(board):
+    while True:
+        try:
+            row = int(input("Enter the row (0-2): "))
+            col = int(input("Enter the column (0-2): "))
+            if 0 <= row <= 2 and 0 <= col <= 2 and board[row][col] == EMPTY:
+                return row, col
+            else:
+                print("Invalid move. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter integers.")
+
+# Main function to play the game
+def play_game():
+    board = [[EMPTY]*3 for _ in range(3)]
+    print("Welcome to Tic-Tac-Toe!")
+    print_board(board)
+    while not game_over(board):
+        print("Player X's turn:")
+        x, y = find_best_move(board)
+        board[x][y] = PLAYER_X
+        print_board(board)
+        if game_over(board):
+            break
+        print("Player O's turn:")
+        x, y = player_move(board)
+        board[x][y] = PLAYER_O
+        print_board(board)
+    if check_winner(board, PLAYER_X):
+        print("Player X wins!")
+    elif check_winner(board, PLAYER_O):
+        print("Player O wins!")
+    else:
+        print("It's a draw!")
+
+# Start the game
+play_game()
